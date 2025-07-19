@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bonded D1 - Partner Invite</title>
+    <link rel="icon" href="./images/app-icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="./images/app-icon.svg">
+    <link rel="stylesheet" href="./partner-invite.css">
+    <style>
+        /* Additional simple navigation styles */
+        .demo-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: rgba(18, 18, 18, 0.9);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .nav-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            color: rgba(255, 255, 255, 0.9);
+            padding: 10px 16px;
+            font-family: "Rethink Sans", sans-serif;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .nav-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+        
+        .demo-indicator {
+            position: fixed;
+            top: 80px;
+            right: 16px;
+            background: rgba(255, 112, 77, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 999;
+        }
+        
+        /* Adjust main content for fixed nav */
+        .partner-invite-container {
+            padding-top: 100px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Demo Navigation -->
+    <div class="demo-nav">
+        <a href="#" class="nav-button" onclick="goBack()">← Back</a>
+        <div style="color: white; font-weight: 600;">Bonded D1 Demo</div>
+        <a href="timeline.html" class="nav-button">Skip to Timeline</a>
+    </div>
+    
+    <!-- Demo Indicator -->
+    <div class="demo-indicator">DEMO v1.0</div>
+
+    <!-- Partner Invite Screen (Using Original Styling) -->
+    <div class="partner-invite-screen improved-contrast">
+        <div class="partner-invite-container">
+            <div class="hero-section">
+                <img
+                    class="bonded-logo-blue"
+                    alt="Bonded logo blue"
+                    src="./images/app-icon.svg"
+                />
+                <h1 class="invite-title">Invite Your Partner</h1>
+                <p class="invite-subtitle">
+                    Connect with your partner to build your relationship timeline together.
+                </p>
+            </div>
+
+            <form class="invite-form" onsubmit="handleInvite(event)">
+                <div class="form-group">
+                    <label for="partner-email" class="form-label">
+                        Partner's Email Address
+                    </label>
+                    <input
+                        id="partner-email"
+                        type="email"
+                        placeholder="partner@example.com"
+                        class="email-input"
+                        required
+                    />
+                </div>
+
+                <div id="status-message" class="status-message" style="display: none;">
+                    <p id="status-text"></p>
+                </div>
+
+                <button type="submit" class="send-invite-button" id="invite-button">
+                    Send Invitation
+                </button>
+            </form>
+
+            <!-- Always show navigation options at bottom -->
+            <div class="bottom-navigation">
+                <p class="nav-help-text">
+                    You can also proceed without sending an invitation right now
+                </p>
+                <div class="bottom-nav-buttons">
+                    <a href="timeline.html" class="outline-button">
+                        Go to Timeline
+                    </a>
+                    <a href="#" class="outline-button" onclick="simulateProfileSetup()">
+                        Profile Setup
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simple demo functionality
+        function handleInvite(event) {
+            event.preventDefault();
+            
+            const button = document.getElementById('invite-button');
+            const statusDiv = document.getElementById('status-message');
+            const statusText = document.getElementById('status-text');
+            const email = document.getElementById('partner-email').value;
+            
+            // Simulate sending invitation
+            button.textContent = 'Sending...';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'block';
+                statusDiv.className = 'status-message sent';
+                statusText.textContent = `✅ Invitation sent to ${email}! They will receive an email with instructions.`;
+                button.textContent = 'Email Sent!';
+                button.className = 'send-invite-button sent';
+                
+                // Show success actions after a moment
+                setTimeout(() => {
+                    document.querySelector('.bottom-navigation').scrollIntoView({ 
+                        behavior: 'smooth' 
+                    });
+                }, 1000);
+            }, 2000);
+        }
+        
+        function goBack() {
+            // In a real app, this would navigate back
+            alert('Demo: This would navigate back to the previous screen');
+        }
+        
+        function simulateProfileSetup() {
+            alert('Demo: This would take you to profile setup');
+        }
+        
+        // Demo message on load
+        setTimeout(() => {
+            console.log('🎯 Bonded D1 Demo - Navigation fixes working!');
+        }, 1000);
+    </script>
+</body>
+</html>
