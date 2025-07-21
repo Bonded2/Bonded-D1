@@ -320,11 +320,10 @@
             overlay.classList.remove('active');
         }
         
-        // Upload simulation
         function showUploadOptions() {
             closeMenu();
-            alert('Demo: Manual Upload\n\nThis would open a file picker to select photos, documents, or other evidence files to add to your timeline.');
-        }
+            window.location.href = 'source-selection.html';
+        } 
         
         function showRetrospectiveUpload() {
             closeMenu();
