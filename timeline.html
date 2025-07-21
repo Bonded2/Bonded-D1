@@ -110,7 +110,91 @@
         .timeline-subtitle {
             font-size: 18px;
             color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 16px;
+        }
+        
+        .timeline-stats {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
             margin-bottom: 32px;
+        }
+        
+        /* Timeline Items */
+        .timeline-items {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .timeline-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .timeline-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+        
+        .timeline-item-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        
+        .timeline-item-time {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .timeline-item-type {
+            background: rgba(255, 112, 77, 0.2);
+            color: rgba(255, 255, 255, 0.9);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .timeline-item-content {
+            position: relative;
+        }
+        
+        .timeline-photo {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .timeline-photo:hover {
+            transform: scale(1.02);
+        }
+        
+        .timeline-item-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 12px;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
         
         /* Empty State */
@@ -237,9 +321,25 @@
             cursor: pointer;
         }
         
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        /* Responsive */
         @media (max-width: 640px) {
             .timeline-title {
                 font-size: 28px;
+            }
+            
+            .timeline-item {
+                padding: 16px;
+            }
+            
+            .timeline-photo {
+                height: 250px;
             }
             
             .action-buttons {
@@ -286,10 +386,23 @@
             <p class="timeline-subtitle">
                 Build your relationship story together
             </p>
+            <div class="timeline-stats" id="timelineStats">
+                Loading timeline...
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading">
+            <p>📱 Loading your relationship timeline...</p>
+        </div>
+
+        <!-- Timeline Items -->
+        <div class="timeline-items" id="timelineItems">
+            <!-- Timeline entries will be populated here -->
         </div>
 
         <!-- Empty State (shows when no data) -->
-        <div class="empty-state">
+        <div class="empty-state" id="emptyState" style="display: none;">
             <div class="empty-icon">📱</div>
             <h2 class="empty-message">No timeline data yet</h2>
             <p class="empty-description">
@@ -309,6 +422,120 @@
     </div>
 
     <script>
+        // Local Vault Management
+        const LOCAL_VAULT_KEY = 'bonded_d1_vault';
+
+        function getLocalVault() {
+            const vault = localStorage.getItem(LOCAL_VAULT_KEY);
+            return vault ? JSON.parse(vault) : [];
+        }
+
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffTime = Math.abs(now - date);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 1) {
+                return 'Today, ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            } else if (diffDays === 2) {
+                return 'Yesterday, ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            } else if (diffDays <= 7) {
+                return diffDays + ' days ago';
+            } else {
+                return date.toLocaleDateString() + ', ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        function createTimelineItem(evidenceItem) {
+            const timelineItem = document.createElement('div');
+            timelineItem.className = 'timeline-item';
+            
+            const timeString = formatTimestamp(evidenceItem.timestamp);
+            
+            let contentHtml = '';
+            
+            if (evidenceItem.type === 'photo') {
+                contentHtml = `
+                    <img src="${evidenceItem.data}" alt="${evidenceItem.filename}" class="timeline-photo" onclick="viewPhoto('${evidenceItem.id}')">
+                `;
+            }
+            
+            timelineItem.innerHTML = `
+                <div class="timeline-item-header">
+                    <div class="timeline-item-time">${timeString}</div>
+                    <div class="timeline-item-type">${evidenceItem.type}</div>
+                </div>
+                <div class="timeline-item-content">
+                    ${contentHtml}
+                    <div class="timeline-item-meta">
+                        <div class="meta-item">
+                            <span>📄</span>
+                            <span>${evidenceItem.filename}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span>💾</span>
+                            <span>${formatFileSize(evidenceItem.size)}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span>📱</span>
+                            <span>${evidenceItem.metadata?.uploadedFrom || 'unknown'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            return timelineItem;
+        }
+
+        function loadTimeline() {
+            const vault = getLocalVault();
+            const timelineItems = document.getElementById('timelineItems');
+            const emptyState = document.getElementById('emptyState');
+            const loadingState = document.getElementById('loadingState');
+            const timelineStats = document.getElementById('timelineStats');
+            
+            // Hide loading
+            loadingState.style.display = 'none';
+            
+            if (vault.length === 0) {
+                // Show empty state
+                emptyState.style.display = 'block';
+                timelineItems.style.display = 'none';
+                timelineStats.textContent = 'No evidence stored yet';
+            } else {
+                // Show timeline with data
+                emptyState.style.display = 'none';
+                timelineItems.style.display = 'flex';
+                
+                // Update stats
+                const photoCount = vault.filter(item => item.type === 'photo').length;
+                timelineStats.textContent = `${vault.length} evidence item${vault.length !== 1 ? 's' : ''} stored (${photoCount} photo${photoCount !== 1 ? 's' : ''})`;
+                
+                // Clear existing items
+                timelineItems.innerHTML = '';
+                
+                // Add each evidence item to timeline (already sorted by timestamp)
+                vault.forEach(evidenceItem => {
+                    const timelineElement = createTimelineItem(evidenceItem);
+                    timelineItems.appendChild(timelineElement);
+                });
+            }
+        }
+
+        function viewPhoto(photoId) {
+            // Simple photo viewer - could be enhanced later
+            alert(`Photo viewer for ID: ${photoId}\n\nThis would open a full-screen photo viewer.`);
+        }
+
         // Menu functionality
         function toggleMenu() {
             const overlay = document.getElementById('menuOverlay');
@@ -320,18 +547,40 @@
             overlay.classList.remove('active');
         }
         
+        // Upload simulation
         function showUploadOptions() {
             closeMenu();
             window.location.href = 'source-selection.html';
-        } 
+        }
         
         function showRetrospectiveUpload() {
             closeMenu();
             alert('Demo: Retrospective Upload\n\nThis would scan your photo gallery and import relevant relationship photos to your timeline.');
         }
         
-        // Demo initialization
-        console.log('🎯 Bonded D1 Timeline - Working hamburger menu and navigation!');
+        // Load timeline when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 Bonded D1 Timeline - Loading local vault contents...');
+            
+            // Small delay to show loading state
+            setTimeout(() => {
+                loadTimeline();
+            }, 500);
+        });
+
+        // Refresh timeline when returning from other pages
+        window.addEventListener('focus', function() {
+            console.log('Page focused - refreshing timeline...');
+            loadTimeline();
+        });
+        
+        // Also refresh when storage changes (if user has multiple tabs)
+        window.addEventListener('storage', function(e) {
+            if (e.key === LOCAL_VAULT_KEY) {
+                console.log('Local vault updated - refreshing timeline...');
+                loadTimeline();
+            }
+        });
     </script>
 </body>
 </html>
