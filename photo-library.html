@@ -364,6 +364,36 @@
         let selectedPhotos = [];
         let photoFiles = [];
 
+        // Local Vault Management
+        const LOCAL_VAULT_KEY = 'bonded_d1_vault';
+
+        function getLocalVault() {
+            const vault = localStorage.getItem(LOCAL_VAULT_KEY);
+            return vault ? JSON.parse(vault) : [];
+        }
+
+        function addToLocalVault(evidenceItem) {
+            const vault = getLocalVault();
+            vault.push(evidenceItem);
+            // Sort by timestamp (newest first)
+            vault.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            localStorage.setItem(LOCAL_VAULT_KEY, JSON.stringify(vault));
+        }
+
+        function generateUniqueId() {
+            return 'evidence_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Convert file to base64 for storage
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
         // Access device photo gallery
         function accessPhotos() {
             const input = document.getElementById('photoInput');
@@ -449,30 +479,56 @@
             }
         }
 
-        // Upload selected photos
-        function uploadSelectedPhotos() {
+        // Upload selected photos to local vault
+        async function uploadSelectedPhotos() {
             if (selectedPhotos.length === 0) return;
 
             const uploadButton = document.getElementById('uploadButton');
             uploadButton.textContent = 'Uploading...';
             uploadButton.disabled = true;
 
-            // Simulate upload process
-            setTimeout(() => {
+            try {
+                showStatus('Processing photos...', 'success');
+
+                // Process each selected photo
+                for (const index of selectedPhotos) {
+                    const file = photoFiles[index];
+                    
+                    // Convert to base64 for storage
+                    const base64Data = await fileToBase64(file);
+                    
+                    // Create evidence item with metadata
+                    const evidenceItem = {
+                        id: generateUniqueId(),
+                        type: 'photo',
+                        timestamp: new Date().toISOString(),
+                        filename: file.name,
+                        size: file.size,
+                        mimeType: file.type,
+                        data: base64Data,
+                        metadata: {
+                            uploadedFrom: 'photo_library',
+                            originalLastModified: file.lastModified,
+                            // Future: geolocation will be added here
+                        }
+                    };
+
+                    // Add to local vault
+                    addToLocalVault(evidenceItem);
+                }
+
                 showStatus(`✅ Successfully uploaded ${selectedPhotos.length} photo${selectedPhotos.length > 1 ? 's' : ''} to your timeline!`, 'success');
-                
-                // Store upload info for timeline
-                localStorage.setItem('bonded_d1_upload', JSON.stringify({
-                    count: selectedPhotos.length,
-                    timestamp: new Date().toISOString(),
-                    type: 'photos'
-                }));
 
                 // Return to timeline after delay
                 setTimeout(() => {
                     window.location.href = 'timeline.html';
                 }, 2000);
-            }, 2000);
+
+            } catch (error) {
+                showStatus('❌ Error uploading photos: ' + error.message, 'error');
+                uploadButton.textContent = 'Upload to Timeline';
+                uploadButton.disabled = false;
+            }
         }
 
         // Show status message
@@ -486,7 +542,7 @@
         }
 
         // Demo initialization
-        console.log('📸 Bonded D1 Photo Library - Real device gallery access!');
+        console.log('📸 Bonded D1 Photo Library - Real device gallery access with Local Vault storage!');
     </script>
 </body>
 </html>
