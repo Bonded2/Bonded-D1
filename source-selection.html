@@ -189,6 +189,33 @@
             background: rgba(255, 112, 77, 0.8);
             border-radius: 2px;
         }
+        
+        /* Responsive */
+        @media (min-width: 768px) {
+            .source-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .source-title {
+                font-size: 28px;
+            }
+            
+            .source-option {
+                padding: 20px;
+                gap: 16px;
+            }
+            
+            .source-icon {
+                font-size: 40px;
+                min-width: 50px;
+            }
+            
+            .source-name {
+                font-size: 18px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -258,4 +285,67 @@
                         <div class="source-description">Access files from Google Drive, iCloud, or Dropbox</div>
                         <div class="source-examples">Shared documents, backed up photos, important files</div>
                     </div>
-                    <div class="source-arrow
+                    <div class="source-arrow">→</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Communication Sources -->
+        <div class="category-section">
+            <h2 class="category-title">Messages & Communications</h2>
+            <div class="source-grid">
+                <div class="source-option" onclick="selectMessages()">
+                    <div class="source-icon">💬</div>
+                    <div class="source-content">
+                        <div class="source-name">Text Messages</div>
+                        <div class="source-description">Import message conversations with your partner</div>
+                        <div class="source-examples">WhatsApp, SMS, iMessage conversations</div>
+                    </div>
+                    <div class="source-arrow">→</div>
+                </div>
+                
+                <div class="source-option" onclick="selectEmail()">
+                    <div class="source-icon">📧</div>
+                    <div class="source-content">
+                        <div class="source-name">Email</div>
+                        <div class="source-description">Upload important email conversations and confirmations</div>
+                        <div class="source-examples">Travel bookings, venue confirmations, romantic emails</div>
+                    </div>
+                    <div class="source-arrow">→</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Source selection functions
+        function selectPhotoLibrary() {
+            console.log('📸 Photo Library selected');
+            window.location.href = 'photo-library.html';
+        }
+        
+        function selectCamera() {
+            alert('Demo: Camera\n\nThis would open your device camera to take a new photo or video for your timeline.');
+        }
+        
+        function selectDocuments() {
+            alert('Demo: Document Files\n\nThis would open a file picker to select PDFs, images of documents, certificates, and other important files.');
+        }
+        
+        function selectCloudStorage() {
+            alert('Demo: Cloud Storage\n\nThis would connect to your Google Drive, iCloud, or Dropbox to access files stored in the cloud.');
+        }
+        
+        function selectMessages() {
+            alert('Demo: Text Messages\n\nThis would help you import and select meaningful conversations with your partner from messaging apps.');
+        }
+        
+        function selectEmail() {
+            alert('Demo: Email\n\nThis would help you upload important emails like travel confirmations, venue bookings, or romantic correspondence.');
+        }
+        
+        // Demo initialization
+        console.log('🎯 Bonded D1 Source Selection - Multiple evidence sources available!');
+    </script>
+</body>
+</html>
