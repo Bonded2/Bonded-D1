@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bonded D1 - Photo Library</title>
+    <link rel="icon" href="./images/app-icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="./images/app-icon.svg">
+    <style>
+        :root {
+            --gradient-primary: linear-gradient(135deg, #2C4CDF 0%, #4F67F0 100%);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "Rethink Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gradient-primary);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        /* Navigation */
+        .demo-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: rgba(18, 18, 18, 0.9);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .nav-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            color: rgba(255, 255, 255, 0.9);
+            padding: 10px 16px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .nav-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+        
+        .demo-indicator {
+            position: fixed;
+            top: 80px;
+            right: 16px;
+            background: rgba(255, 112, 77, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 999;
+        }
+        
+        /* Main Content */
+        .photo-container {
+            padding: 100px 20px 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .photo-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .photo-title {
+            font-family: "Trocchi", serif;
+            font-size: 28px;
+            font-weight: 400;
+            margin-bottom: 12px;
+            color: white;
+        }
+        
+        .photo-subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+        
+        /* Access Button */
+        .access-section {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .access-button {
+            background: rgba(255, 112, 77, 0.9);
+            color: white;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 24px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 16px rgba(255, 112, 77, 0.3);
+        }
+        
+        .access-button:hover {
+            background: rgba(255, 112, 77, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 112, 77, 0.4);
+        }
+        
+        .access-button:disabled {
+            background: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.6);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* Hidden file input */
+        .file-input {
+            display: none;
+        }
+        
+        /* Photo Grid */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .photo-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+        }
+        
+        .photo-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+        
+        .photo-item.selected {
+            border-color: rgba(255, 112, 77, 0.8);
+            box-shadow: 0 0 0 2px rgba(255, 112, 77, 0.4);
+        }
+        
+        .photo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .photo-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .photo-item:hover .photo-overlay {
+            opacity: 1;
+        }
+        
+        .photo-item.selected .photo-overlay {
+            opacity: 1;
+            background: rgba(255, 112, 77, 0.3);
+        }
+        
+        .photo-check {
+            font-size: 24px;
+            color: white;
+        }
+        
+        /* Upload Section */
+        .upload-section {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(18, 18, 18, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .upload-section.visible {
+            transform: translateY(0);
+        }
+        
+        .upload-content {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+        
+        .upload-info {
+            flex: 1;
+        }
+        
+        .upload-count {
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 4px;
+        }
+        
+        .upload-description {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .upload-button {
+            background: rgba(255, 112, 77, 0.9);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .upload-button:hover {
+            background: rgba(255, 112, 77, 1);
+        }
+        
+        .upload-button:disabled {
+            background: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.5);
+            cursor: not-allowed;
+        }
+        
+        /* Status Messages */
+        .status-message {
+            text-align: center;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .status-message.success {
+            background: rgba(76, 175, 80, 0.2);
+            border-color: rgba(76, 175, 80, 0.4);
+        }
+        
+        .status-message.error {
+            background: rgba(244, 67, 54, 0.2);
+            border-color: rgba(244, 67, 54, 0.4);
+        }
+        
+        /* Responsive */
+        @media (max-width: 640px) {
+            .photo-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 12px;
+            }
+            
+            .upload-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .upload-button {
+                width: 100%;
+                max-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Demo Navigation -->
+    <div class="demo-nav">
+        <a href="source-selection.html" class="nav-button">← Back</a>
+        <div style="color: white; font-weight: 600;">Photo Library</div>
+        <a href="timeline.html" class="nav-button">Cancel</a>
+    </div>
+    
+    <!-- Demo Indicator -->
+    <div class="demo-indicator">DEMO v1.0</div>
+
+    <!-- Main Content -->
+    <div class="photo-container">
+        <div class="photo-header">
+            <h1 class="photo-title">Select Photos</h1>
+            <p class="photo-subtitle">
+                Choose photos from your device gallery to add to your relationship timeline
+            </p>
+        </div>
+
+        <!-- Access Photos Button -->
+        <div class="access-section">
+            <button class="access-button" onclick="accessPhotos()">
+                <span>📸</span>
+                Access Photo Gallery
+            </button>
+            <input type="file" class="file-input" id="photoInput" multiple accept="image/*" onchange="handlePhotoSelection(event)">
+        </div>
+
+        <!-- Status Message -->
+        <div id="statusMessage" class="status-message" style="display: none;">
+            <p id="statusText"></p>
+        </div>
+
+        <!-- Photo Grid -->
+        <div class="photo-grid" id="photoGrid" style="display: none;">
+            <!-- Photos will be displayed here -->
+        </div>
+    </div>
+
+    <!-- Upload Section -->
+    <div class="upload-section" id="uploadSection">
+        <div class="upload-content">
+            <div class="upload-info">
+                <div class="upload-count" id="uploadCount">0 photos selected</div>
+                <div class="upload-description">Selected photos will be added to your timeline</div>
+            </div>
+            <button class="upload-button" id="uploadButton" onclick="uploadSelectedPhotos()" disabled>
+                Upload to Timeline
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let selectedPhotos = [];
+        let photoFiles = [];
+
+        // Access device photo gallery
+        function accessPhotos() {
+            const input = document.getElementById('photoInput');
+            input.click();
+        }
+
+        // Handle photo selection from device
+        function handlePhotoSelection(event) {
+            const files = Array.from(event.target.files);
+            photoFiles = files;
+            
+            if (files.length === 0) {
+                showStatus('No photos selected', 'error');
+                return;
+            }
+
+            showStatus(`Loading ${files.length} photos...`, 'success');
+            displayPhotos(files);
+        }
+
+        // Display selected photos in grid
+        function displayPhotos(files) {
+            const grid = document.getElementById('photoGrid');
+            grid.innerHTML = '';
+            grid.style.display = 'grid';
+
+            files.forEach((file, index) => {
+                if (file.type.startsWith('image/')) {
+                    const photoItem = document.createElement('div');
+                    photoItem.className = 'photo-item';
+                    photoItem.onclick = () => togglePhotoSelection(index);
+
+                    const img = document.createElement('img');
+                    img.className = 'photo-img';
+                    img.src = URL.createObjectURL(file);
+                    img.alt = `Photo ${index + 1}`;
+
+                    const overlay = document.createElement('div');
+                    overlay.className = 'photo-overlay';
+                    
+                    const check = document.createElement('div');
+                    check.className = 'photo-check';
+                    check.innerHTML = '✓';
+                    
+                    overlay.appendChild(check);
+                    photoItem.appendChild(img);
+                    photoItem.appendChild(overlay);
+                    grid.appendChild(photoItem);
+                }
+            });
+
+            document.getElementById('statusMessage').style.display = 'none';
+        }
+
+        // Toggle photo selection
+        function togglePhotoSelection(index) {
+            const photoItem = document.querySelectorAll('.photo-item')[index];
+            
+            if (selectedPhotos.includes(index)) {
+                selectedPhotos = selectedPhotos.filter(i => i !== index);
+                photoItem.classList.remove('selected');
+            } else {
+                selectedPhotos.push(index);
+                photoItem.classList.add('selected');
+            }
+
+            updateUploadSection();
+        }
+
+        // Update upload section
+        function updateUploadSection() {
+            const uploadSection = document.getElementById('uploadSection');
+            const uploadCount = document.getElementById('uploadCount');
+            const uploadButton = document.getElementById('uploadButton');
+
+            if (selectedPhotos.length > 0) {
+                uploadSection.classList.add('visible');
+                uploadCount.textContent = `${selectedPhotos.length} photo${selectedPhotos.length > 1 ? 's' : ''} selected`;
+                uploadButton.disabled = false;
+            } else {
+                uploadSection.classList.remove('visible');
+                uploadButton.disabled = true;
+            }
+        }
+
+        // Upload selected photos
+        function uploadSelectedPhotos() {
+            if (selectedPhotos.length === 0) return;
+
+            const uploadButton = document.getElementById('uploadButton');
+            uploadButton.textContent = 'Uploading...';
+            uploadButton.disabled = true;
+
+            // Simulate upload process
+            setTimeout(() => {
+                showStatus(`✅ Successfully uploaded ${selectedPhotos.length} photo${selectedPhotos.length > 1 ? 's' : ''} to your timeline!`, 'success');
+                
+                // Store upload info for timeline
+                localStorage.setItem('bonded_d1_upload', JSON.stringify({
+                    count: selectedPhotos.length,
+                    timestamp: new Date().toISOString(),
+                    type: 'photos'
+                }));
+
+                // Return to timeline after delay
+                setTimeout(() => {
+                    window.location.href = 'timeline.html';
+                }, 2000);
+            }, 2000);
+        }
+
+        // Show status message
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            const statusText = document.getElementById('statusText');
+            
+            statusText.textContent = message;
+            statusDiv.className = `status-message ${type}`;
+            statusDiv.style.display = 'block';
+        }
+
+        // Demo initialization
+        console.log('📸 Bonded D1 Photo Library - Real device gallery access!');
+    </script>
+</body>
+</html>
